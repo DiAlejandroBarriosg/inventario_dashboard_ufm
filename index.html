@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Inventario de computadoras UFM · Explorador</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+--paper:#F4F6F8;--surface:#fff;--ink:#1B2A3A;--muted:#5E6B7A;--line:#DCE1E7;--soft:#EDF1F5;--focus:#2F5D8A;--warn:#C98A1B;--bad:#B23A3A;
+--c0:#2F5D8A;--c1:#7FA3CC;--c2:#2E8B6E;--c3:#D9A441;--c4:#98A3AF;--c5:#C0473A;--c6:#7B5EA7;--c7:#E08A3C;--c8:#C3CCD6;
+--sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--cond:"IBM Plex Sans Condensed","Arial Narrow",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#101820;--surface:#16212C;--ink:#E6ECF2;--muted:#9AA8B6;--line:#2A3846;--soft:#1D2A37;--focus:#9DBDE0;--warn:#E0A94A;--bad:#E0685A;
+--c0:#5C8FC4;--c1:#9DBDE0;--c2:#4DB08F;--c3:#E3B659;--c4:#7D8995;--c5:#E0685A;--c6:#A58AD1;--c7:#F0A35C;--c8:#556373}}
+:root[data-theme="dark"]{--paper:#101820;--surface:#16212C;--ink:#E6ECF2;--muted:#9AA8B6;--line:#2A3846;--soft:#1D2A37;--focus:#9DBDE0;--warn:#E0A94A;--bad:#E0685A;
+--c0:#5C8FC4;--c1:#9DBDE0;--c2:#4DB08F;--c3:#E3B659;--c4:#7D8995;--c5:#E0685A;--c6:#A58AD1;--c7:#F0A35C;--c8:#556373}
+*{box-sizing:border-box}html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.45;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1240px;margin:0 auto;padding:24px 22px 48px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+h1{font-family:var(--cond);font-weight:700;font-size:28px;line-height:1.1;margin:0}
+header p{margin:3px 0 0;color:var(--muted);font-size:13.5px}
+.btn{all:unset;cursor:pointer;border:1px solid var(--line);background:var(--surface);border-radius:5px;padding:6px 11px;font-size:13px;color:var(--ink);white-space:nowrap}
+.btn:hover{background:var(--soft)}.btn:focus-visible,select:focus-visible,.chip:focus-visible{outline:2px solid var(--focus);outline-offset:1px}
+.num{font-variant-numeric:tabular-nums}
+/* filters */
+.filters{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding:10px 0 12px;border-bottom:1px solid var(--line)}
+.frow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr)) auto;gap:10px;align-items:end}
+label.f{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--muted);min-width:0}
+select{font:inherit;font-size:14px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:5px;padding:7px 8px;width:100%;min-width:0}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;align-items:center}
+.chips span.l{font-size:12px;color:var(--muted);margin-right:4px}
+.chip{all:unset;cursor:pointer;display:inline-flex;gap:6px;align-items:center;border:1px solid var(--line);border-radius:999px;padding:3px 10px 3px 8px;font-size:12.5px;background:var(--surface)}
+.chip i{width:9px;height:9px;border-radius:50%}
+.chip[aria-pressed="false"]{opacity:.45;text-decoration:line-through}
+.crumb{margin-top:8px;font-size:13px;color:var(--muted);min-height:18px}.crumb b{color:var(--ink);font-weight:600}
+/* kpis */
+.kpis{display:grid;grid-template-columns:1.25fr repeat(7,minmax(0,1fr));gap:10px;margin:16px 0}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:10px 12px;border-top:4px solid var(--k,var(--ink));min-width:0}
+.kpi span{display:block;font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi b{display:block;font-family:var(--cond);font-weight:700;font-size:28px;line-height:1.1}
+.kpi small{font-size:11.5px;color:var(--muted)}
+.kpi.main b{font-size:36px}
+/* layout */
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px}
+.grid>*{min-width:0}
+.box{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:16px 18px}
+.bh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.bh h2{font-size:15.5px;font-weight:600;margin:0}.bh p{margin:0;font-size:12.5px;color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:5px;overflow:hidden}
+.seg button{all:unset;cursor:pointer;padding:5px 11px;font-size:12.5px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.seg button:focus-visible{outline:2px solid var(--focus);outline-offset:-2px}
+.bars{max-height:520px;overflow:auto;padding-right:4px}
+.brow{all:unset;box-sizing:border-box;display:grid;grid-template-columns:minmax(120px,210px) 1fr 52px;gap:10px;align-items:center;width:100%;padding:5px 6px;border-radius:4px;cursor:pointer}
+.brow:hover{background:var(--soft)}.brow:focus-visible{outline:2px solid var(--focus)}
+.brow .n{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brow .t{text-align:right;font-weight:600;font-size:13.5px}
+.stack{display:flex;height:15px;border-radius:2px;overflow:hidden}
+.stack span{display:block;height:100%}
+.hint{font-size:12px;color:var(--muted);margin-top:8px}
+.donut{position:relative;max-width:240px;margin:6px auto 4px}
+.donut svg{display:block;width:100%;height:auto}
+.donut .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none}
+.donut .c b{font-family:var(--cond);font-size:32px;line-height:1}.donut .c span{font-size:12px;color:var(--muted)}
+.leg{display:grid;gap:3px;margin-top:8px}
+.leg div{display:grid;grid-template-columns:10px 1fr auto 44px;gap:8px;align-items:center;font-size:13px}
+.leg i{width:10px;height:10px;border-radius:2px}.leg em{font-style:normal;color:var(--muted);text-align:right;font-size:12px}
+.leg .z{opacity:.4}
+/* table */
+.tablebox{margin-top:16px}
+.tw{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:5px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:13.5px}
+th,td{padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+thead th{position:sticky;top:0;background:var(--surface);z-index:2;font-size:12px;font-weight:600;color:var(--muted);cursor:pointer;user-select:none;text-align:right;border-bottom:2px solid var(--line)}
+thead th:first-child,tbody td:first-child,tfoot td:first-child{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1}
+thead th:first-child{z-index:3}
+thead th[aria-sort="descending"]::after{content:" ▾"}thead th[aria-sort="ascending"]::after{content:" ▴"}
+thead th .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+td{text-align:right}tbody tr{cursor:pointer}tbody tr:hover td{background:var(--soft)}
+tbody tr:focus-visible td{outline:2px solid var(--focus);outline-offset:-2px}
+td.z{color:var(--muted);opacity:.45}
+td.tot{font-weight:600}
+td.hw{color:var(--warn)}td.hw.b{color:var(--bad)}
+tfoot td{position:sticky;bottom:0;background:var(--soft);font-weight:600;border-top:2px solid var(--line)}
+th.hw,td.hw{border-left:1px solid var(--line)}
+.opts{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.opts label{font-size:13px;display:flex;gap:6px;align-items:center;cursor:pointer}
+footer{margin-top:18px;font-size:12px;color:var(--muted);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+@media (max-width:1100px){.kpis{grid-template-columns:repeat(4,minmax(0,1fr))}.kpi.main{grid-column:span 4}}
+@media (max-width:1100px){.frow{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media (max-width:900px){.grid{grid-template-columns:1fr}.frow{grid-template-columns:repeat(2,minmax(0,1fr))}.frow .btn{justify-self:start}}
+@media (max-width:520px){.wrap{padding:16px 12px 36px}.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.kpi.main{grid-column:span 2}
+ .brow{grid-template-columns:110px 1fr 40px}.filters{position:static}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div><h1>Inventario de computadoras</h1><p>Explorador por facultad, categoría, subcategoría, edificio y uso · datos consolidados a septiembre de 2026 · no incluye equipos faltantes</p></div>
+  <button class="btn" id="theme" type="button">Cambiar tema</button>
+</header>
+
+<div class="filters">
+  <div class="frow">
+    <label class="f">Tipo de área<select id="fTipo"></select></label>
+    <label class="f">Facultad o área<select id="fAgr"></select></label>
+    <label class="f">Unidad<select id="fUni"></select></label>
+    <label class="f">Categoría<select id="fCat"></select></label>
+    <label class="f">Subcategoría (subdepartamento)<select id="fSub"></select></label>
+    <label class="f">Edificio<select id="fEdi"></select></label>
+    <button class="btn" id="clear" type="button">Quitar filtros</button>
+  </div>
+  <div class="chips" id="chips"><span class="l">Categorías incluidas:</span></div>
+  <div class="crumb" id="crumb"></div>
+</div>
+
+<div class="kpis" id="kpis"></div>
+
+<div class="grid">
+  <div class="box">
+    <div class="bh"><div><h2 id="barsTitle">Computadoras por facultad</h2><p>Haz clic en una barra para filtrar por ella.</p></div>
+      <div class="seg" id="dim" role="group" aria-label="Agrupar por">
+        <button type="button" data-d="agr" aria-pressed="true">Facultad</button>
+        <button type="button" data-d="sub" aria-pressed="false">Categoría › subcategoría</button>
+        <button type="button" data-d="edi" aria-pressed="false">Edificio</button>
+        <button type="button" data-d="uni" aria-pressed="false">Unidad</button>
+      </div></div>
+    <div class="bars" id="bars"></div>
+  </div>
+  <div class="box">
+    <div class="bh"><h2>Distribución por uso</h2></div>
+    <div class="donut" id="donut"><div class="c"><b class="num" id="dNum"></b><span>computadoras</span></div></div>
+    <div class="leg" id="leg"></div>
+  </div>
+</div>
+
+<div class="box tablebox">
+  <div class="bh"><div><h2 id="tblTitle">Tabla por facultad</h2><p>Clic en un encabezado para ordenar; clic en una fila para filtrar.</p></div>
+    <div class="opts"><label><input type="checkbox" id="showHw"> Mostrar estado del equipo</label>
+      <label><input type="checkbox" id="showPct"> Ver en porcentaje</label>
+      <button class="btn" id="csv" type="button">Descargar CSV</button></div></div>
+  <div class="tw"><table id="tbl"></table></div>
+</div>
+
+<footer><span>Solo datos agregados: no incluye nombres, series ni identificadores de equipos. Se excluyen bajas, equipo para desechar, servidores, monitores, duplicados y equipos faltantes. Las variantes de escritura de un subdepartamento se agrupan.</span><span id="foot"></span></footer>
+</div>
+<script>
+const RAW=[["Arquitectura", "Arquitectura", "Facultad", "Edificio Académico", "Administración", "Administrativas", 4, 0, 0, 0, 0], ["Arquitectura", "Arquitectura", "Facultad", "Edificio Académico", "Taller", "Administrativas", 3, 2, 2, 0, 0], ["Arquitectura", "Arquitectura", "Facultad", "Edificio Académico", "(sin subdepartamento)", "Administrativas", 13, 10, 0, 2, 0], ["Arquitectura", "Arquitectura", "Facultad", "Edificio Académico", "Laboratorio", "Laboratorios", 15, 7, 5, 2, 2], ["Ciencias Económicas", "Ciencias Económicas", "Facultad", "Edificio Académico", "(sin subdepartamento)", "Administrativas", 5, 2, 2, 0, 0], ["Ciencias Económicas", "Ciencias Económicas", "Facultad", "Edificio Académico", "Administración", "Administrativas", 46, 14, 8, 0, 6], ["Ciencias Sociales", "Ciencias Sociales", "Facultad", "Edificio Académico", "Administración", "Administrativas", 4, 4, 1, 3, 3], ["Derecho", "Derecho", "Facultad", "Edificio Académico", "Administración", "Administrativas", 15, 8, 6, 3, 5], ["Derecho", "Información Jurídica", "Facultad", "Edificio Académico", "Administración", "Administrativas", 3, 1, 0, 0, 0], ["Derecho", "Información Jurídica", "Facultad", "Edificio Académico", "Laboratorio", "Laboratorios", 4, 0, 0, 4, 4], ["Educación", "Educación - MPC", "Facultad", "Edificio Académico", "Administración", "Administrativas", 5, 0, 0, 0, 4], ["Escuela de Cine", "Escuela de Cine", "Facultad", "Centro Cultural", "Laboratorio", "Laboratorios", 19, 0, 0, 0, 1], ["Escuela de Cine", "Escuela de Cine", "Facultad", "Centro Cultural", "Recepción", "Laboratorios", 1, 0, 0, 0, 0], ["Escuela de Cine", "Escuela de Cine", "Facultad", "Centro Cultural", "(sin subdepartamento)", "Laboratorios", 1, 0, 0, 0, 0], ["Escuela de Negocios", "Acton MBA", "Facultad", "Escuela de Negocios", "Administración", "Administrativas", 6, 3, 3, 0, 1], ["Escuela de Negocios", "Escuela de Negocios", "Facultad", "Escuela de Negocios", "Administración", "Administrativas", 8, 2, 1, 0, 0], ["Escuela de Negocios", "Escuela de Negocios", "Facultad", "Escuela de Negocios", "(sin subdepartamento)", "Administrativas", 22, 6, 5, 0, 1], ["Escuela de Negocios", "Laboratorios EN", "Facultad", "Escuela de Negocios", "Laboratorio", "Laboratorios", 103, 14, 15, 6, 5], ["Escuela de Negocios", "Laboratorios EN", "Facultad", "Escuela de Negocios", "(sin subdepartamento)", "Laboratorios", 41, 1, 0, 0, 1], ["Escuela de Negocios", "Laboratorios EN", "Facultad", "Escuela de Negocios", "(sin subdepartamento)", "Stock", 5, 0, 0, 0, 0], ["Escuela de Negocios", "Laboratorios EN", "Facultad", "Escuela de Negocios", "Laboratorio", "Stock", 28, 0, 0, 0, 28], ["Estudios Políticos y RRII", "Estudios Políticos y RRII", "Facultad", "Edificio Académico", "Administración", "Administrativas", 14, 1, 0, 1, 7], ["Estudios Políticos y RRII", "Estudios Políticos y RRII", "Facultad", "Edificio Académico", "(sin subdepartamento)", "Administrativas", 2, 0, 0, 0, 0], ["Formación Continua", "Formación Continua", "Facultad", "Edificio Académico", "Administración", "Administrativas", 3, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Administración", "Administrativas", 14, 7, 6, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Decanatura", "Administrativas", 4, 1, 1, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Contabilidad", "Administrativas", 4, 2, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Recepción", "Administrativas", 1, 1, 1, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Comité de Etica", "Administrativas", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Dirección de Investigación", "Administrativas", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Mejora Continua", "Administrativas", 1, 1, 1, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Secretaía de Salon Estudiantil", "Administrativas", 1, 0, 1, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Gestión Académica", "Administrativas", 4, 1, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Secretario de Consejo Facultad", "Administrativas", 2, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Coordinación de Area Básica", "Administrativas", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Secretaria de Investigación", "Administrativas", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Dirección Gestión Académica", "Administrativas", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Audiovisuales", "Administrativas", 17, 12, 12, 0, 0], ["Medicina", "Medicina", "Facultad", "Hospital San Juan", "Administración", "Administrativas", 14, 13, 12, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Salón de Profesores", "Profesores", 2, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "TBL", "Laboratorios", 1, 0, 0, 0, 0], ["Medicina", "Medicina", "Facultad", "Medicina", "Laboratorio", "Laboratorios", 28, 0, 0, 0, 0], ["New Media", "New Media", "Facultad", "Centro Cultural", "Postproducción", "Administrativas", 13, 3, 3, 0, 4], ["New Media", "New Media", "Facultad", "Centro Cultural", "Producción", "Administrativas", 6, 4, 3, 0, 3], ["New Media", "New Media", "Facultad", "Centro Cultural", "E-Learning", "Administrativas", 2, 0, 0, 0, 0], ["New Media", "New Media", "Facultad", "Centro Cultural", "(sin subdepartamento)", "Administrativas", 1, 1, 1, 0, 1], ["New Media", "New Media", "Facultad", "Centro Cultural", "(sin subdepartamento)", "Stock", 5, 0, 0, 0, 0], ["Nutrición", "Nutrición", "Facultad", "Edificio Académico", "Administración", "Administrativas", 13, 6, 3, 2, 2], ["Odontología", "Odontología", "Facultad", "Odontología", "Recepción", "Administrativas", 6, 5, 4, 0, 1], ["Odontología", "Odontología", "Facultad", "Odontología", "Call Center", "Administrativas", 3, 2, 2, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Area Oficina", "Administrativas", 11, 5, 4, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Sala de sesiones", "Administrativas", 1, 1, 1, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Oficina Decano", "Administrativas", 1, 1, 1, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Oficina Cecilia", "Administrativas", 1, 1, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Casos", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Atención al estudiante", "Administrativas", 1, 1, 1, 0, 1], ["Odontología", "Odontología", "Facultad", "Edificio Las Brisas", "Recepción", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Edificio Las Brisas", "Administración", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Edificio Las Brisas", "Sensor móvil", "Administrativas", 1, 1, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Cad-Cam", "Administrativas", 2, 2, 1, 1, 1], ["Odontología", "Odontología", "Facultad", "Odontología", "Farmacia/Bodega", "Administrativas", 2, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Fresadora", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Dispensario", "Administrativas", 1, 1, 1, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Oficina Especialista", "Administrativas", 1, 1, 1, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Recepcion OA", "Administrativas", 2, 2, 2, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Interpretación", "Administrativas", 2, 1, 1, 0, 1], ["Odontología", "Odontología", "Facultad", "Odontología", "Servicio al cliente", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Administración", "Administrativas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Catedrático", "Profesores", 7, 6, 6, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Salón Profesores", "Profesores", 1, 1, 1, 1, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Laboratorio Simulación", "Laboratorios", 3, 2, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Laboratorio 3D", "Laboratorios", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Laboratorio técnicas", "Laboratorios", 2, 2, 1, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Call Center", "Clínicas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Area Oficina", "Clínicas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Edificio Las Brisas", "Dispensario", "Clínicas", 2, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Edificio Las Brisas", "Asistentes Doctores", "Clínicas", 2, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Silla", "Clínicas", 73, 55, 58, 1, 2], ["Odontología", "Odontología", "Facultad", "Odontología", "Escáner", "Clínicas", 2, 2, 2, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Dispensario", "Clínicas", 6, 4, 4, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Sensores", "Clínicas", 2, 1, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Interpretación", "Clínicas", 9, 9, 9, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Restaurativa (posgrado)", "Clínicas", 7, 1, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Mantenimiento", "Clínicas", 2, 1, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Odontopediatria", "Clínicas", 2, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Quirófano", "Clínicas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Restaurativa (pregrado)", "Clínicas", 5, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Radiología", "Clínicas", 4, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Diagnóstico", "Clínicas", 3, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Cirugía y periodoncia", "Clínicas", 1, 0, 0, 0, 0], ["Odontología", "Odontología", "Facultad", "Odontología", "Endodoncia", "Clínicas", 2, 0, 0, 0, 0], ["Odontología", "Odontología - Las Brisas (hoja sin título)", "Facultad", "Edificio Las Brisas", "Administración", "Administrativas", 3, 0, 0, 0, 0], ["Odontología", "Odontología - Las Brisas (hoja sin título)", "Facultad", "Edificio Las Brisas", "Laboratorio", "Laboratorios", 2, 0, 0, 0, 0], ["Posgrado", "Posgrado", "Facultad", "Edificio Académico", "Administración", "Administrativas", 5, 2, 1, 0, 1], ["Posgrado", "Posgrado", "Facultad", "Edificio Académico", "Admisiones", "Administrativas", 1, 0, 0, 0, 0], ["Posgrado", "Posgrado", "Facultad", "Edificio Académico", "Control Académico", "Administrativas", 1, 0, 0, 0, 0], ["Psicología", "Clínicas de Salud", "Facultad", "Clínicas de Salud", "Psicología", "Administrativas", 18, 10, 3, 1, 3], ["Psicología", "Clínicas de Salud", "Facultad", "Clínicas de Salud", "Medicina", "Administrativas", 2, 2, 0, 0, 0], ["Psicología", "Clínicas de Salud", "Facultad", "Clínicas de Salud", "Recepción General", "Administrativas", 1, 1, 0, 0, 0], ["Psicología", "Clínicas de Salud", "Facultad", "Clínicas de Salud", "Becado ITA", "Administrativas", 3, 0, 0, 0, 0], ["Psicología", "Clínicas de Salud", "Facultad", "Clínicas de Salud", "Clínica Viktor Frankl", "Administrativas", 10, 2, 0, 0, 0], ["Psicología", "Psicología", "Facultad", "Edificio Académico", "Administración", "Administrativas", 11, 7, 4, 0, 2], ["Psicología", "Psicología", "Facultad", "Edificio Académico", "Becado ITA", "Administrativas", 2, 0, 0, 0, 0], ["Psicología", "Psicología", "Facultad", "Edificio Académico", "Becado ITA", "Sin asignar", 1, 0, 0, 0, 0], ["Centros y programas académicos", "Bruno Leoni", "Centro académico", "Edificio Académico", "Administración", "Administrativas", 2, 1, 0, 1, 1], ["Centros y programas académicos", "CHH", "Centro académico", "Edificio Académico", "Administración", "Administrativas", 14, 12, 10, 4, 3], ["Centros y programas académicos", "CHH", "Centro académico", "Edificio Académico", "(sin subdepartamento)", "Administrativas", 1, 0, 0, 0, 0], ["Centros y programas académicos", "CHH", "Centro académico", "Edificio Académico", "Salón de Profesores", "Profesores", 4, 4, 4, 0, 0], ["Centros y programas académicos", "Co-Lab", "Centro académico", "Edificio Académico", "Administración", "Laboratorios", 2, 0, 0, 0, 0], ["Centros y programas académicos", "Estudio de Grabación", "Centro académico", "Centro Cultural", "(sin subdepartamento)", "Administrativas", 1, 0, 0, 0, 1], ["Centros y programas académicos", "Exploraciones de la Libertad", "Centro académico", "Casa 9-20", "Administración", "Administrativas", 1, 0, 0, 0, 0], ["Centros y programas académicos", "Exploraciones sobre la historia", "Centro académico", "Sin dato", "(sin subdepartamento)", "Administrativas", 2, 1, 1, 0, 0], ["Centros y programas académicos", "Investigación Histórica de Guatemala", "Centro académico", "Sin dato", "(sin subdepartamento)", "Administrativas", 1, 1, 1, 0, 0], ["Centros y programas académicos", "UFM-Labs", "Centro académico", "Casa 9-20", "Administración", "Administrativas", 16, 4, 2, 0, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "CETA", "Administrativas", 8, 2, 3, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Recepción", "Administrativas", 3, 2, 2, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Audiovisuales", "Administrativas", 11, 9, 8, 1, 6], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Casa Díaz", "Infraestructura", "Administrativas", 2, 2, 2, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Monitoreo", "Administrativas", 10, 9, 8, 0, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Parqueos", "Administrativas", 1, 1, 0, 0, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Akademeia", "Administrativas", 7, 3, 1, 0, 3], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Sin dato", "(sin subdepartamento)", "Administrativas", 1, 1, 1, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Laboratorio", "Laboratorios", 6, 3, 3, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Edificio Académico", "CETA", "Laboratorios", 1, 1, 0, 1, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "(sin subdepartamento)", "Laboratorios", 1, 0, 0, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Edificio Académico", "(sin subdepartamento)", "Salones", 41, 40, 2, 38, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Centro Estudiantil", "(sin subdepartamento)", "Salones", 1, 1, 0, 1, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "(sin subdepartamento)", "Salones", 8, 6, 0, 6, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Centro Cultural", "(sin subdepartamento)", "Salones", 1, 1, 0, 1, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Audiovisuales", "Stock", 1, 1, 0, 0, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "(sin subdepartamento)", "Stock", 20, 3, 7, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "Audiovisuales", "Otros", 24, 6, 4, 0, 2], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Sin dato", "(sin subdepartamento)", "Otros", 16, 13, 0, 6, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Sin dato", "Audiovisuales", "Otros", 1, 1, 1, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "(sin subdepartamento)", "Otros", 1, 0, 0, 0, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Edificio Académico", "CETA", "Otros", 4, 3, 0, 3, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Odontología", "CETA", "Otros", 6, 2, 0, 4, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Escuela de Negocios", "CETA", "Otros", 1, 1, 1, 0, 1], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Centro Estudiantil", "CETA", "Otros", 3, 2, 0, 2, 0], ["CETA (IT, audiovisuales y salones)", "CETA", "Servicio", "Medicina", "CETA", "Otros", 4, 1, 0, 2, 0], ["Servicios", "Auditorio JBG", "Servicio", "Centro Cultural", "JBG", "Administrativas", 3, 2, 1, 0, 0], ["Servicios", "Auditorio JBG", "Servicio", "Centro Cultural", "Taquilla", "Administrativas", 2, 0, 2, 0, 0], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Administración", "Administrativas", 9, 4, 0, 0, 2], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Procesos Técnicos", "Administrativas", 3, 0, 0, 0, 0], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Sistemas", "Administrativas", 3, 2, 0, 1, 1], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Consultas", "Administrativas", 5, 1, 0, 1, 1], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Circulación", "Administrativas", 2, 1, 0, 1, 2], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Catalogación", "Administrativas", 1, 0, 0, 0, 0], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Taller", "Administrativas", 1, 0, 0, 0, 0], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "Archivo General Centroamerica", "Administrativas", 1, 0, 0, 0, 0], ["Servicios", "Biblioteca", "Servicio", "Biblioteca Ludwig von Mises", "(sin subdepartamento)", "Administrativas", 2, 2, 1, 2, 2], ["Servicios", "Museo Popol Vuh", "Servicio", "Museo Popol Vuh", "Administración", "Administrativas", 13, 8, 4, 2, 4], ["Dependencias administrativas", "Administracion Central", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Administracion Central", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Admisiones", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 4, 1, 1, 0, 0], ["Dependencias administrativas", "Admisiones", "Administrativa", "Centro Estudiantil", "Internacional", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Admisiones", "Administrativa", "Centro Estudiantil", "(sin subdepartamento)", "Administrativas", 1, 0, 0, 0, 1], ["Dependencias administrativas", "Alumni", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 2, 0, 0, 0, 0], ["Dependencias administrativas", "Atención al Estudiante", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 8, 7, 7, 0, 1], ["Dependencias administrativas", "BPO", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 4, 0, 0, 0, 4], ["Dependencias administrativas", "Banco Industrial", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 1, 1, 1, 0, 1], ["Dependencias administrativas", "Casa 11", "Administrativa", "Casa 11", "(sin subdepartamento)", "Administrativas", 4, 2, 3, 1, 0], ["Dependencias administrativas", "Casa Popenoe", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 1, 0, 0, 0, 0], ["Dependencias administrativas", "Casa Popenoe", "Administrativa", "Casa Popenoe", "(sin subdepartamento)", "Administrativas", 1, 0, 0, 0, 0], ["Dependencias administrativas", "Contabilidad", "Administrativa", "Casa 9-19", "Contabilidad", "Administrativas", 19, 13, 7, 0, 0], ["Dependencias administrativas", "Contabilidad", "Administrativa", "Centro Estudiantil", "Contabilidad", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Contabilidad", "Administrativa", "Casa 9-19", "Contraloría", "Administrativas", 3, 2, 0, 0, 0], ["Dependencias administrativas", "Crédito Educativo", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 4, 1, 1, 0, 0], ["Dependencias administrativas", "Cuenta Corriente", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 5, 0, 0, 0, 0], ["Dependencias administrativas", "Departamento Financiero", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 4, 0, 0, 0, 1], ["Dependencias administrativas", "Departamento de Construcción", "Administrativa", "Casa Díaz", "Administración", "Administrativas", 6, 5, 4, 2, 4], ["Dependencias administrativas", "Desarrollo", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 6, 3, 0, 0, 1], ["Dependencias administrativas", "Ediciones", "Administrativa", "Casa Díaz", "Administración", "Administrativas", 5, 2, 1, 0, 0], ["Dependencias administrativas", "Ediciones", "Administrativa", "Casa Díaz", "(sin subdepartamento)", "Administrativas", 1, 0, 0, 0, 0], ["Dependencias administrativas", "Eventos", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 6, 1, 1, 0, 0], ["Dependencias administrativas", "IT", "Administrativa", "Casa 9-19", "Administración", "Administrativas", 18, 0, 7, 0, 2], ["Dependencias administrativas", "Mercadeo", "Administrativa", "Centro Estudiantil", "Administración", "Administrativas", 13, 4, 2, 1, 1], ["Dependencias administrativas", "Publicaciones", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 11, 6, 4, 0, 0], ["Dependencias administrativas", "Rectoría", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 5, 2, 2, 0, 1], ["Dependencias administrativas", "Rectoría", "Administrativa", "Casa 9-20", "Procesos", "Administrativas", 2, 0, 0, 0, 0], ["Dependencias administrativas", "Rectoría", "Administrativa", "Casa 9-20", "Proyectos", "Administrativas", 1, 0, 0, 0, 0], ["Dependencias administrativas", "Recursos Humanos", "Administrativa", "Escuela de Negocios", "(sin subdepartamento)", "Administrativas", 3, 3, 3, 0, 0], ["Dependencias administrativas", "Registro", "Administrativa", "Casa 9-20", "Escaneo", "Administrativas", 2, 0, 0, 0, 0], ["Dependencias administrativas", "Registro", "Administrativa", "Casa 9-20", "Graduación", "Administrativas", 3, 1, 1, 1, 0], ["Dependencias administrativas", "Registro", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 9, 1, 0, 0, 0], ["Dependencias administrativas", "Relaciones Públicas", "Administrativa", "Edificio Académico", "(sin subdepartamento)", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Secretaria General", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 3, 1, 1, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Centro Estudiantil", "Mantenimiento", "Administrativas", 4, 2, 2, 0, 1], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Edificio Académico", "Mantenimiento", "Administrativas", 2, 2, 2, 1, 1], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Bodega Verde", "Mantenimiento", "Administrativas", 2, 2, 1, 1, 1], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Torreta", "Monitoreo", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Ciudad Vieja", "Seguridad", "Administrativas", 2, 2, 0, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Escuela de Negocios", "Monitoreo", "Administrativas", 2, 1, 0, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Clínicas de Salud", "Monitoreo", "Administrativas", 1, 0, 0, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Odontología", "Monitoreo", "Administrativas", 1, 1, 0, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Museo Popol Vuh", "Monitoreo", "Administrativas", 1, 1, 1, 0, 0], ["Dependencias administrativas", "Seguridad y Mantenimiento", "Administrativa", "Torreta", "Seguridad", "Administrativas", 1, 1, 0, 0, 0], ["Dependencias administrativas", "Vicerectoria Internacional", "Administrativa", "Casa 9-20", "Administración", "Administrativas", 2, 0, 0, 0, 1]]; // [agr, unidad, tipo, edificio, subdepartamento, categoria, n, win10, gen7, ram8, hdd]
+const CATS=["Administrativas","Profesores","Laboratorios","Salones","Stock","Clínicas","Sin asignar","Otros"];
+const COL=["var(--c0)","var(--c1)","var(--c2)","var(--c3)","var(--c4)","var(--c6)","var(--c7)","var(--c8)"];
+const TIPOS={"Facultad":"Facultades","Centro académico":"Centros académicos","Servicio":"Servicios y CETA","Administrativa":"Dependencias administrativas"};
+const HW=[["win10","Windows 10 o anterior",7,""],["gen7","Intel ≤ 7.ª gen.",8,"b"],["ram8","Menos de 8 GB RAM",9,"b"],["hdd","Solo HDD",10,""]];
+const fmt=n=>n.toLocaleString("es-GT");
+const st={tipo:"",agr:"",uni:"",sub:"",edi:"",cats:new Set(CATS),dim:"agr",sort:"total",dir:-1,hw:false,pct:false};
+const $=id=>document.getElementById(id);
+const uniq=(arr)=>[...new Set(arr)].sort((a,b)=>a.localeCompare(b,"es"));
+function base(skip){return RAW.filter(r=>(skip==="tipo"||!st.tipo||r[2]===st.tipo)&&(skip==="agr"||!st.agr||r[0]===st.agr)&&(skip==="uni"||!st.uni||r[1]===st.uni)&&(skip==="sub"||!st.sub||r[4]===st.sub)&&(skip==="edi"||!st.edi||r[3]===st.edi));}
+function rows(){return base().filter(r=>st.cats.has(r[5]));}
+function fill(sel,opts,val,all){const s=$(sel);s.innerHTML=`<option value="">${all}</option>`+opts.map(o=>`<option value="${o[0]}"${o[0]===val?" selected":""}>${o[1]}</option>`).join("");}
+function syncSelects(){
+  const cnt=(skip,idx)=>{const m={};base(skip).forEach(r=>{if(st.cats.has(r[5]))m[r[idx]]=(m[r[idx]]||0)+r[6];});return m;};
+  const t=cnt("tipo",2);fill("fTipo",Object.keys(TIPOS).filter(k=>t[k]).map(k=>[k,`${TIPOS[k]} (${fmt(t[k])})`]),st.tipo,"Todas");
+  const a=cnt("agr",0);fill("fAgr",uniq(Object.keys(a)).map(k=>[k,`${k} (${fmt(a[k])})`]),st.agr,"Todas");
+  const u=cnt("uni",1);fill("fUni",uniq(Object.keys(u)).map(k=>[k,`${k} (${fmt(u[k])})`]),st.uni,"Todas");
+  const cc={};base().forEach(r=>{cc[r[5]]=(cc[r[5]]||0)+r[6];});
+  const one=st.cats.size===1?[...st.cats][0]:"";
+  fill("fCat",CATS.filter(c=>cc[c]).map(c=>[c,`${c} (${fmt(cc[c])})`]),one,"Todas");
+  const s=cnt("sub",4);fill("fSub",uniq(Object.keys(s)).map(k=>[k,`${k} (${fmt(s[k])})`]),st.sub,one?"Todas":"Todas (elige una categoría para ver sus subcategorías)");
+  const e=cnt("edi",3);fill("fEdi",uniq(Object.keys(e)).map(k=>[k,`${k} (${fmt(e[k])})`]),st.edi,"Todos");
+}
+["tipo","agr","uni","sub","edi"].forEach(k=>$("f"+k[0].toUpperCase()+k.slice(1)).addEventListener("change",e=>{st[k]=e.target.value;if(k==="agr"){st.sub="";if(st.agr&&st.dim==="agr")setDim("sub",true);}if(k==="uni"){st.sub="";}render();}));
+$("fCat").addEventListener("change",e=>{const v=e.target.value;st.cats=v?new Set([v]):new Set(CATS);st.sub="";if(v&&(st.dim==="agr"||st.dim==="uni")&&(st.agr||st.uni))setDim("sub",true);render();});
+$("clear").addEventListener("click",()=>{st.tipo=st.agr=st.uni=st.sub=st.edi="";st.cats=new Set(CATS);setDim("agr",true);render();});
+// chips
+CATS.forEach((c,i)=>{const b=document.createElement("button");b.type="button";b.className="chip";b.dataset.c=c;b.innerHTML=`<i style="background:${COL[i]}"></i>${c}`;
+  b.addEventListener("click",()=>{if(st.cats.has(c)){if(st.cats.size>1)st.cats.delete(c);}else st.cats.add(c);st.sub="";render();});$("chips").appendChild(b);});
+const soloBtn=document.createElement("button");soloBtn.type="button";soloBtn.className="btn";soloBtn.style.fontSize="12px";soloBtn.style.padding="3px 9px";soloBtn.textContent="Todos";
+soloBtn.addEventListener("click",()=>{st.cats=new Set(CATS);render();});$("chips").appendChild(soloBtn);
+// dim
+function setDim(d,silent){st.dim=d;document.querySelectorAll("#dim button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.d===d)));if(!silent)render();}
+document.querySelectorAll("#dim button").forEach(b=>b.addEventListener("click",()=>setDim(b.dataset.d)));
+const _x=0;const DIMIDX={agr:0,uni:1,edi:3,sub:4},DIMNAME={agr:"facultad o área",uni:"unidad",edi:"edificio",sub:"categoría y subcategoría"};
+const keyOf=r=>st.dim==="sub"?(st.cats.size===1?r[4]:r[5]+" › "+r[4]):r[DIMIDX[st.dim]];
+function pivot(rs){const m=new Map();rs.forEach(r=>{const k=keyOf(r);if(!m.has(k))m.set(k,{name:k,total:0,c:Object.fromEntries(CATS.map(x=>[x,0])),win10:0,gen7:0,ram8:0,hdd:0});
+  const o=m.get(k);o.total+=r[6];o.c[r[5]]+=r[6];o.win10+=r[7];o.gen7+=r[8];o.ram8+=r[9];o.hdd+=r[10];});return [...m.values()];}
+function drill(name){if(st.dim==="agr"){st.agr=name;st.uni="";st.sub="";setDim("sub",true);}else if(st.dim==="uni"){st.uni=name;st.sub="";setDim("sub",true);}else if(st.dim==="sub"){const p=name.split(" › ");if(p.length>1){st.cats=new Set([p[0]]);st.sub=p.slice(1).join(" › ");}else st.sub=name;setDim("edi",true);}else{st.edi=name;}render();}
+function render(){
+  syncSelects();
+  document.querySelectorAll(".chip").forEach(b=>b.setAttribute("aria-pressed",String(st.cats.has(b.dataset.c))));
+  const rs=rows(),total=rs.reduce((s,r)=>s+r[6],0);
+  const ct=Object.fromEntries(CATS.map(c=>[c,0]));rs.forEach(r=>ct[r[5]]+=r[6]);
+  // crumb
+  const parts=[];if(st.tipo)parts.push(TIPOS[st.tipo]);if(st.agr)parts.push(st.agr);if(st.uni)parts.push(st.uni);if(st.cats.size===1)parts.push([...st.cats][0]);if(st.sub)parts.push(st.sub);if(st.edi)parts.push("Edificio: "+st.edi);
+  if(st.cats.size>1&&st.cats.size<CATS.length)parts.push("Usos: "+[...st.cats].join(", "));
+  $("crumb").innerHTML=parts.length?"Mostrando: <b>"+parts.join(" › ")+"</b>":"Mostrando: <b>toda la universidad</b>";
+  // kpis
+  const main=["Administrativas","Profesores","Laboratorios","Salones","Stock","Clínicas"];
+  const others=ct["Sin asignar"]+ct["Otros"];
+  const pc=v=>total?Math.round(v*100/total)+"%":"0%";
+  $("kpis").innerHTML=`<div class="kpi main"><span>Total de computadoras</span><b class="num">${fmt(total)}</b><small>${new Set(rs.map(r=>r[1])).size} unidades · ${new Set(rs.map(r=>r[3])).size} edificios</small></div>`+
+   main.map(c=>`<div class="kpi" style="--k:${COL[CATS.indexOf(c)]}"><span>${c}</span><b class="num">${fmt(ct[c])}</b><small>${pc(ct[c])}</small></div>`).join("")+
+   `<div class="kpi" style="--k:var(--c8)"><span>Otros y sin asignar</span><b class="num">${fmt(others)}</b><small>${pc(others)}</small></div>`;
+  // bars
+  const pv=pivot(rs).sort((a,b)=>b.total-a.total),max=Math.max(1,...pv.map(p=>p.total));
+  $("barsTitle").textContent="Computadoras por "+DIMNAME[st.dim];
+  $("bars").innerHTML=pv.length?pv.map(p=>`<button class="brow" type="button" data-n="${p.name.replace(/"/g,"&quot;")}" title="${p.name}: ${fmt(p.total)}"><span class="n">${p.name}</span><span><span class="stack" style="width:${Math.max(3,p.total*100/max)}%">${CATS.map((c,i)=>p.c[c]?`<span style="width:${p.c[c]*100/p.total}%;background:${COL[i]}" title="${c}: ${p.c[c]}"></span>`:"").join("")}</span></span><span class="t num">${fmt(p.total)}</span></button>`).join(""):`<p class="hint">No hay computadoras con estos filtros. Quita algún filtro para ver resultados.</p>`;
+  $("bars").querySelectorAll(".brow").forEach(b=>b.addEventListener("click",()=>drill(b.dataset.n)));
+  // donut
+  const R=100,r=64,cx=120,cy=120;let a0=-Math.PI/2,svg=`<svg viewBox="0 0 240 240" role="img" aria-label="Distribución por uso">`;
+  const arc=(s,e)=>{const L=e-s>Math.PI?1:0,p=(a,d)=>`${cx+d*Math.cos(a)} ${cy+d*Math.sin(a)}`;return `M${p(s,R)}A${R} ${R} 0 ${L} 1 ${p(e,R)}L${p(e,r)}A${r} ${r} 0 ${L} 0 ${p(s,r)}Z`;};
+  CATS.forEach((c,i)=>{if(!ct[c]||!total)return;const a1=a0+2*Math.PI*ct[c]/total;svg+=ct[c]===total?`<circle cx="${cx}" cy="${cy}" r="${(R+r)/2}" fill="none" stroke="${COL[i]}" stroke-width="${R-r}"><title>${c}: ${ct[c]}</title></circle>`:`<path d="${arc(a0,a1-0.005)}" fill="${COL[i]}"><title>${c}: ${fmt(ct[c])}</title></path>`;a0=a1;});
+  $("donut").querySelector("svg")?.remove();$("donut").insertAdjacentHTML("afterbegin",svg+"</svg>");$("dNum").textContent=fmt(total);
+  $("leg").innerHTML=CATS.map((c,i)=>`<div class="${ct[c]?"":"z"}"><i style="background:${COL[i]}"></i><span>${c}</span><b class="num">${fmt(ct[c])}</b><em class="num">${pc(ct[c])}</em></div>`).join("");
+  // table
+  renderTable(pv);
+  $("foot").textContent=`${fmt(RAW.reduce((s,r)=>s+r[6],0))} computadoras en total (sin faltantes)`;
+}
+function renderTable(pv){
+  const cats=CATS.filter(c=>st.cats.has(c));
+  const cols=[["name",{agr:"Facultad o área",uni:"Unidad",sub:st.cats.size===1?"Subcategoría ("+[...st.cats][0]+")":"Categoría › subcategoría",edi:"Edificio"}[st.dim]],["total","Total"],...cats.map(c=>[c,c])].concat(st.hw?HW.map(h=>[h[0],h[1]]):[]);
+  const val=(p,k)=>k==="name"?p.name:k==="total"?p.total:(p.c[k]!==undefined?p.c[k]:p[k]);
+  pv.sort((a,b)=>{const x=val(a,st.sort),y=val(b,st.sort);return st.sort==="name"?st.dir*String(x).localeCompare(String(y),"es"):st.dir*((x??0)-(y??0));});
+  const cell=(p,k)=>{const v=val(p,k);if(k==="name")return `<td>${v}</td>`;const h=HW.find(x=>x[0]===k);
+    const txt=st.pct&&k!=="total"?(p.total?Math.round(v*100/p.total)+"%":"0%"):fmt(v);
+    return `<td class="num${k==="total"?" tot":""}${h?" hw "+h[3]:""}${v?"":" z"}">${txt}</td>`;};
+  const T={name:"",total:0,c:Object.fromEntries(CATS.map(c=>[c,0])),win10:0,gen7:0,ram8:0,hdd:0};
+  pv.forEach(p=>{T.total+=p.total;CATS.forEach(c=>T.c[c]+=p.c[c]);HW.forEach(h=>T[h[0]]+=p[h[0]]);});T.name="Total";
+  const head="<thead><tr>"+cols.map(([k,l])=>{const ci=CATS.indexOf(k);const h=HW.find(x=>x[0]===k);return `<th tabindex="0" data-k="${k}" class="${h?"hw":""}" aria-sort="${st.sort===k?(st.dir<0?"descending":"ascending"):"none"}">${ci>=0?`<span class="dot" style="background:${COL[ci]}"></span>`:""}${l}</th>`;}).join("")+"</tr></thead>";
+  const body="<tbody>"+pv.map(p=>`<tr tabindex="0" data-n="${p.name.replace(/"/g,"&quot;")}">`+cols.map(([k])=>cell(p,k)).join("")+"</tr>").join("")+"</tbody>";
+  const foot="<tfoot><tr>"+cols.map(([k])=>cell(T,k)).join("")+"</tr></tfoot>";
+  $("tbl").innerHTML=head+body+foot;
+  $("tblTitle").textContent="Tabla por "+DIMNAME[st.dim];
+  $("tbl").querySelectorAll("th").forEach(th=>{const go=()=>{const k=th.dataset.k;if(st.sort===k)st.dir*=-1;else{st.sort=k;st.dir=k==="name"?1:-1;}renderTable(pivot(rows()));$("tbl").querySelector(`th[data-k="${CSS.escape(k)}"]`).focus();};
+    th.addEventListener("click",go);th.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});});
+  $("tbl").querySelectorAll("tbody tr").forEach(tr=>{tr.addEventListener("click",()=>drill(tr.dataset.n));tr.addEventListener("keydown",e=>{if(e.key==="Enter"){drill(tr.dataset.n);}});});
+  window._csv=[cols.map(c=>c[1]),...pv.map(p=>cols.map(([k])=>val(p,k))),cols.map(([k])=>val(T,k))];
+}
+$("showHw").addEventListener("change",e=>{st.hw=e.target.checked;render();});
+$("showPct").addEventListener("change",e=>{st.pct=e.target.checked;render();});
+let DL=null,inViewer=false;
+if(window.claude&&typeof window.claude.use==="function"){inViewer=true;window.claude.use("downloads").then(d=>{DL=d;if(!d)$("csv").style.display="none";}).catch(()=>{$("csv").style.display="none";});}
+$("csv").addEventListener("click",async()=>{const q=v=>`"${String(v).replace(/"/g,'""')}"`;const txt="\ufeff"+window._csv.map(r=>r.map(q).join(",")).join("\r\n");
+  const name="computadoras_por_"+st.dim+".csv";
+  if(DL){try{await DL.save({filename:name,data:new Blob([txt],{type:"text/csv;charset=utf-8"})});}catch(e){}return;}
+  if(inViewer)return;
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"text/csv;charset=utf-8"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
+$("theme").addEventListener("click",()=>{const r=document.documentElement,dark=r.dataset.theme?r.dataset.theme==="dark":matchMedia("(prefers-color-scheme: dark)").matches;r.dataset.theme=dark?"light":"dark";});
+render();
+</script>
+</body>
+</html>
